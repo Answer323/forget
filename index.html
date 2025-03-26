@@ -441,7 +441,7 @@
     <div style="font-size: 24px; color: #34495e;">≣</div>
   </div>
 
-  <audio id="bgMusic" loop></audio>
+  <audio id="bgMusic" loop playsinline preload="auto"></audio>
 
   <script>
     let memos = [];
@@ -548,14 +548,24 @@
       }, 300);
     });
 
-    musicController.addEventListener('mouseup', (e) => {
+    musicController.addEventListener('mouseup', async (e) => {
       clearTimeout(longPressTimer);
       if (!isLongPress) {
         if (audio.src) {
-          if (isPlaying) {
-            audio.pause();
-          } else {
-            audio.play();
+          try {
+            if (isPlaying) {
+              await audio.pause();
+            } else {
+              const playPromise = audio.play();
+              if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                  console.log("播放失败:", error);
+                  alert("请重新点击播放按钮");
+                });
+              }
+            }
+          } catch (error) {
+            console.log("音频控制失败:", error);
           }
         }
       }
@@ -568,20 +578,35 @@
     });
 
     songItems.forEach(item => {
-      item.addEventListener('click', function() {
+      item.addEventListener('click', async function() {
         const url = this.dataset.url;
         const musicIcon = musicController.querySelector('.music-icon');
         
         songItems.forEach(song => song.classList.remove('playing'));
         
-        if (audio.src === url && isPlaying) {
-          audio.pause();
-        } else {
-          if (audio.src !== url) {
-            audio.src = url;
+        try {
+          if (audio.src === url && isPlaying) {
+            await audio.pause();
+          } else {
+            if (audio.src !== url) {
+              audio.src = url;
+              // 加载音频
+              await audio.load();
+            }
+            // 尝试播放
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+              playPromise.then(() => {
+                this.classList.add('playing');
+              }).catch(error => {
+                console.log("播放失败:", error);
+                // 提示用户交互
+                alert("请点击播放按钮开始播放音乐");
+              });
+            }
           }
-          audio.play();
-          this.classList.add('playing');
+        } catch (error) {
+          console.log("音频操作失败:", error);
         }
       });
     });
@@ -787,6 +812,68 @@
 
     // 初始化搜索历史
     loadSearchHistory();
+
+    // 添加触摸事件支持
+    musicController.addEventListener('touchstart', () => {
+      longPressTimer = setTimeout(() => {
+        isLongPress = true;
+        volumeControl.classList.add('show');
+      }, 300);
+    });
+
+    musicController.addEventListener('touchend', async (e) => {
+      e.preventDefault(); // 阻止默认行为
+      clearTimeout(longPressTimer);
+      if (!isLongPress) {
+        if (audio.src) {
+          try {
+            if (isPlaying) {
+              await audio.pause();
+            } else {
+              const playPromise = audio.play();
+              if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                  console.log("播放失败:", error);
+                  alert("请重新点击播放按钮");
+                });
+              }
+            }
+          } catch (error) {
+            console.log("音频控制失败:", error);
+          }
+        }
+      }
+      isLongPress = false;
+    });
+
+    // 添加音频加载事件处理
+    audio.addEventListener('loadstart', () => {
+      console.log("开始加载音频");
+    });
+
+    audio.addEventListener('loadeddata', () => {
+      console.log("音频数据已加载");
+    });
+
+    audio.addEventListener('error', (e) => {
+      console.log("音频加载错误:", e);
+      alert("音频加载失败，请检查网络连接或重试");
+    });
+
+    // 初始化音频设置
+    document.addEventListener('DOMContentLoaded', () => {
+      audio.volume = 0.5;
+      // 设置音频跨域属性
+      audio.crossOrigin = "anonymous";
+    });
+
+    // 添加用户交互检测
+    document.addEventListener('touchstart', function() {
+      // 用户首次触摸时尝试加载音频
+      if (audio.src) {
+        audio.load();
+      }
+    }, { once: true });
   </script>
 </body>
 </html>
