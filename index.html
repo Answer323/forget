@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memories | 备忘录</title>
+  <style>
+    body {
+      font-family: 'Microsoft YaHei', sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f8f9fa;
+      color: #2c3e50;
+      position: relative;
+      min-height: 100vh;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(circle at 10% 20%, rgba(52, 73, 94, 0.03) 0%, transparent 20%),
+        radial-gradient(circle at 90% 80%, rgba(52, 73, 94, 0.03) 0%, transparent 20%),
+        radial-gradient(circle at 50% 50%, rgba(52, 73, 94, 0.02) 0%, transparent 40%),
+        linear-gradient(45deg, rgba(52, 73, 94, 0.01) 0%, transparent 40%);
+      z-index: -1;
+    }
+    .decoration {
+      position: fixed;
+      pointer-events: none;
+      z-index: -1;
+    }
+    .decoration-top-left {
+      top: 40px;
+      left: 40px;
+      width: 200px;
+      height: 200px;
+      border-left: 2px solid rgba(52, 73, 94, 0.1);
+      border-top: 2px solid rgba(52, 73, 94, 0.1);
+      border-radius: 20px 0 0 0;
+    }
+    .decoration-bottom-right {
+      bottom: 40px;
+      right: 40px;
+      width: 200px;
+      height: 200px;
+      border-right: 2px solid rgba(52, 73, 94, 0.1);
+      border-bottom: 2px solid rgba(52, 73, 94, 0.1);
+      border-radius: 0 0 20px 0;
+    }
+    .dots {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: 0.4;
+      z-index: -1;
+      background-image: radial-gradient(circle at center, #34495e 1px, transparent 1px);
+      background-size: 50px 50px;
+    }
+    .container {
+      background-color: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+    h1 {
+      color: #34495e;
+      text-align: center;
+      margin-bottom: 40px;
+      font-size: 1.8em;
+      font-weight: 300;
+      letter-spacing: 2px;
+    }
+    .input-section {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 30px;
+    }
+    input {
+      flex: 1;
+      padding: 14px 18px;
+      border: 1px solid #e1e1e1;
+      border-radius: 8px;
+      font-size: 15px;
+      transition: all 0.3s ease;
+      background-color: #f8f9fa;
+    }
+    input:focus {
+      outline: none;
+      border-color: #7f8c8d;
+      background-color: white;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    button {
+      padding: 14px 28px;
+      background-color: #34495e;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 15px;
+      letter-spacing: 1px;
+    }
+    button:hover {
+      background-color: #2c3e50;
+      transform: translateY(-1px);
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      padding: 20px;
+      background-color: #f8f9fa;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s ease;
+      border-left: 3px solid #34495e;
+    }
+    li:hover {
+      transform: translateX(3px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    .delete-btn {
+      background-color: transparent;
+      padding: 8px 16px;
+      font-size: 14px;
+      color: #7f8c8d;
+      border: 1px solid #7f8c8d;
+    }
+    .delete-btn:hover {
+      background-color: #7f8c8d;
+      color: white;
+      transform: none;
+    }
+    .memo-date {
+      font-size: 13px;
+      color: #95a5a6;
+      margin-top: 6px;
+    }
+    .memo-content {
+      flex: 1;
+      margin-right: 20px;
+    }
+    .memo-text {
+      font-size: 15px;
+      line-height: 1.5;
+      color: #2c3e50;
+    }
+    .music-controller {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background-color: white;
+      padding: 15px;
+      border-radius: 50%;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      z-index: 1000;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .music-controller:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    }
+    .music-controller:active {
+      transform: scale(0.95);
+    }
+    .music-icon {
+      font-size: 24px;
+      color: #34495e;
+      display: inline-block;
+      transition: all 0.3s ease;
+    }
+    .music-icon.rotating {
+      animation: rotate 3s linear infinite;
+    }
+    .playlist-container {
+      position: fixed;
+      bottom: 100px;
+      right: 100px;
+      background-color: white;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      display: none;
+      z-index: 999;
+    }
+    .playlist-container.show {
+      display: block;
+    }
+    .song-item {
+      padding: 8px 12px;
+      cursor: pointer;
+      border-radius: 6px;
+      color: #34495e;
+      transition: all 0.3s ease;
+      font-size: 14px;
+    }
+    .song-item:hover {
+      background-color: #f8f9fa;
+    }
+    .song-item.playing {
+      background-color: #34495e;
+      color: white;
+    }
+    .volume-control {
+      position: fixed;
+      bottom: 100px;
+      right: 30px;
+      background-color: white;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      display: none;
+      z-index: 999;
+      width: 40px;
+      transform-origin: bottom right;
+    }
+    .volume-control.show {
+      display: block;
+    }
+    .volume-slider {
+      writing-mode: bt-lr;
+      -webkit-appearance: none;
+      width: 100px;
+      height: 4px;
+      background: #e1e1e1;
+      outline: none;
+      transform: rotate(-90deg) translate(-50%, 0);
+      transform-origin: top left;
+      margin: 50px 0 0 20px;
+    }
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 12px;
+      height: 12px;
+      background: #34495e;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .volume-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+      background: #2c3e50;
+    }
+    .volume-icon {
+      text-align: center;
+      color: #34495e;
+      font-size: 14px;
+      margin-top: 5px;
+    }
+    @keyframes rotate {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    .playlist-btn {
+      position: fixed;
+      bottom: 30px;
+      right: 100px;
+      background-color: white;
+      padding: 15px;
+      border-radius: 50%;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      z-index: 1000;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .playlist-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    }
+    .playlist-btn:active {
+      transform: scale(0.95);
+    }
+    .search-section {
+      margin-bottom: 20px;
+      position: relative;
+    }
+    .search-wrapper {
+      position: relative;
+    }
+    .search-input {
+      width: 100%;
+      padding: 14px 18px;
+      padding-left: 45px;
+      border: 1px solid #e1e1e1;
+      border-radius: 8px;
+      font-size: 15px;
+      transition: all 0.3s ease;
+      background-color: #f8f9fa;
+    }
+    .search-icon {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #95a5a6;
+      font-size: 18px;
+    }
+    .no-results {
+      text-align: center;
+      padding: 20px;
+      color: #95a5a6;
+      font-style: italic;
+      display: none;
+    }
+    .search-history {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      margin-top: 5px;
+      display: none;
+      z-index: 100;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .search-history.show {
+      display: block;
+    }
+    .history-item {
+      padding: 10px 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .history-item:hover {
+      background-color: #f8f9fa;
+    }
+    .history-text {
+      flex: 1;
+    }
+    .history-delete {
+      color: #95a5a6;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .history-item:hover .history-delete {
+      opacity: 1;
+    }
+    .highlight {
+      background-color: rgba(52, 73, 94, 0.1);
+      padding: 0 2px;
+      border-radius: 2px;
+    }
+    .clear-history {
+      padding: 8px 15px;
+      text-align: center;
+      color: #95a5a6;
+      font-size: 13px;
+      border-top: 1px solid #eee;
+      cursor: pointer;
+    }
+    .clear-history:hover {
+      color: #34495e;
+      background-color: #f8f9fa;
+    }
+  </style>
+</head>
+<body>
+  <div class="dots"></div>
+  <div class="decoration decoration-top-left"></div>
+  <div class="decoration decoration-bottom-right"></div>
+
+  <div class="container">
+    <h1>MEMORIES</h1>
+    <div class="search-section">
+      <div class="search-wrapper">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" id="search-input" 
+               placeholder="搜索备忘录...">
+        <div class="search-history" id="search-history"></div>
+      </div>
+    </div>
+    <div class="input-section">
+      <input type="text" id="memo-input" placeholder="写下你的想法...">
+      <button onclick="addMemo()">记录</button>
+    </div>
+    <div class="no-results" id="no-results">没有找到相关内容</div>
+    <ul id="memo-list"></ul>
+  </div>
+
+  <div class="volume-control" id="volumeControl">
+    <input type="range" class="volume-slider" id="volumeSlider" 
+           min="0" max="100" value="50" orient="vertical">
+    <div class="volume-icon">50%</div>
+  </div>
+
+  <div class="music-controller" id="musicController">
+    <div class="music-icon">♪</div>
+  </div>
+
+  <div class="playlist-container" id="playlist">
+    <div class="song-item" data-url="https://ws6.stream.qqmusic.qq.com/O400000DRboo2m41Wf.ogg?guid=2220087796&vkey=8EF8D502560062896FAF0DD2D90144A762A5C3DE40589DAB860043480ED20AD47D3298E095D97C860F356F8E17CE6005B985105C2A71DF66__v2b9ab398&uin=2681012130&fromtag=120532">彩券</div>
+    <div class="song-item" data-url="https://ws6.stream.qqmusic.qq.com/O4000036xmsy45febi.ogg?guid=251509026&vkey=45DFA50BAC92EC8EEF91A4BC79986A479DF1DEB92C6F1C72E821DD29EB13C94B88BDE6C771123C64D1286690E5F740C5578421C0140BBE76__v2b9ab84d&uin=2681012130&fromtag=120532&src=O400003knQ0m28HTOJ.ogg">Sweatshirt</div>
+    <div class="song-item" data-url="https://ws6.stream.qqmusic.qq.com/O400000c72vs0aRony.ogg?guid=3890471400&vkey=F30047251DA5025760C2BAC66ED8EFB7E077BBC95B1CA03CE19FE96396B9127271EC7F77F24CE64371253FF2B5CD5BB45A3B5C1A82CB786C__v2b9ab390&uin=2681012130&fromtag=1205323">就是爱你</div>
+    <div class="song-item" data-url="https://ws6.stream.qqmusic.qq.com/O400001yzLeR0sxh9Y.ogg?guid=2483678532&vkey=AC66EFF6EBBA24BF7193EF5A41630BF8AE36DBE77CBA21EC88F0211265D0E60AB7C6B65E4A88C0E572DBB4F9F4D258917508CD63C1904645__v2b9aae21&uin=2681012130&fromtag=120532">爱爱爱</div>
+    <div class="song-item" data-url="https://ws6.stream.qqmusic.qq.com/O400003e2bKk2r1xkc.ogg?guid=5746002154&vkey=8D87849B409A42E472B4C99E54381B9CFEC9463689AA895431F05E0FC61979787FCE234D2F725E6C3A11EAC5D126CFB13350910D62D5AE7C__v2b9ab390&uin=2681012130&fromtag=120532">只字不提</div>
+    <div class="song-item" data-url="https://ws6.stream.qqmusic.qq.com/O400000vAQpe2kj1lD.ogg?guid=7099120628&vkey=8CF6135E8FC2CE2AEE75C6C855AB01DB18366DA63577856020DF804BFAE00624B5DA53B6331DD680C39F20DE299C966C0B9ECF8878DFECD5__v2b9ab398&uin=2681012130&fromtag=120532">恶作剧</div>
+    <div class="song-item" data-url="https://ws6.stream.qqmusic.qq.com/O400002O9tzk0igkOz.ogg?guid=2918423950&vkey=7EAA52C71B7187B83D063E4533B12B6A04C4794456A2C36FF73B7EF444B6356A995C728A7FEB851B5AE71E76D4E73A4B21705C23D5F94329__v2b9ab36d&uin=2681012130&fromtag=120532&src=O400001F5m0P2UY4BJ.ogg">违背的青春</div>
+    <div class="song-item" data-url="https://ws6.stream.qqmusic.qq.com/O400004N1Tk24OVDoF.ogg?guid=2813162448&vkey=49BE2F128A60A2085A544CC37D5A474E5C494BD6B99714DE0B3C9AA35A1DA6D74BCD23FF154B22933039E0B2859D521540A865B0734D84C7__v2b9ab84d&uin=2681012130&fromtag=120532g">Just the way you are</div>
+    <div class="song-item" data-url="https://ws6.stream.qqmusic.qq.com/O400002Ktf7C4UeW7X.ogg?guid=5301623210&vkey=FC985A980DA547C6611618A43439998A1FC7059623B2A614DE0BF8F813AC2407DB13439E0589F0CCE2092E952BA9F412490554F4B2811EC5__v21e2a1877&uin=2681012130&fromtag=120532">爱我还是他</div>
+    <div class="song-item" data-url="https://ws6.stream.qqmusic.qq.com/O400003POzO60KnBVx.ogg?guid=3508953770&vkey=892882CD0DCCCC18E6D1A57C30449E0BC7FA1661A86BAA16691FAF5248568C100CB2DC49D5D7592552A95ED9A7B8B9EAC384B1780911E81B__v21e2a1737&uin=2681012130&fromtag=120532">海芋恋</div>
+  </div>
+
+  <div class="playlist-btn" id="playlistBtn">
+    <div style="font-size: 24px; color: #34495e;">≣</div>
+  </div>
+
+  <audio id="bgMusic" loop></audio>
+
+  <script>
+    let memos = [];
+
+    function loadMemos() {
+      const savedMemos = localStorage.getItem('memos');
+      if (savedMemos) {
+        memos = JSON.parse(savedMemos);
+        renderMemos(memos);
+      }
+    }
+
+    function saveMemos() {
+      localStorage.setItem('memos', JSON.stringify(memos));
+    }
+
+    function renderMemos(memosToRender) {
+      const list = document.getElementById('memo-list');
+      const noResults = document.getElementById('no-results');
+      list.innerHTML = '';
+      
+      if (memosToRender.length === 0) {
+        noResults.style.display = 'block';
+      } else {
+        noResults.style.display = 'none';
+        memosToRender.forEach((memo, index) => {
+          const li = document.createElement('li');
+          li.innerHTML = `
+            <div class="memo-content">
+              <div class="memo-text">${memo.text}</div>
+              <div class="memo-date">${memo.date}</div>
+            </div>
+            <button class="delete-btn" onclick="deleteMemo(${index})">删除</button>
+          `;
+          list.appendChild(li);
+        });
+      }
+    }
+
+    function addMemo() {
+      const input = document.getElementById('memo-input');
+      
+      if (input.value.trim() !== '') {
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('zh-CN') + ' ' + 
+                      now.toLocaleTimeString('zh-CN', {hour12: false});
+        
+        const memo = {
+          text: input.value,
+          date: dateStr
+        };
+
+        memos.unshift(memo);
+        saveMemos();
+        renderMemos(memos);
+        input.value = '';
+      }
+    }
+
+    function deleteMemo(index) {
+      memos.splice(index, 1);
+      saveMemos();
+      renderMemos(memos);
+    }
+
+    function searchMemos(query) {
+      if (!query.trim()) {
+        renderMemos(memos);
+        return;
+      }
+
+      const filteredMemos = memos.filter(memo => 
+        memo.text.toLowerCase().includes(query.toLowerCase()) ||
+        memo.date.includes(query)
+      );
+      renderMemos(filteredMemos);
+    }
+
+    document.getElementById('search-input').addEventListener('input', function(e) {
+      searchMemos(e.target.value);
+    });
+
+    document.getElementById('memo-input').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        addMemo();
+      }
+    });
+
+    loadMemos();
+
+    const musicController = document.getElementById('musicController');
+    const playlist = document.getElementById('playlist');
+    const audio = document.getElementById('bgMusic');
+    const songItems = document.querySelectorAll('.song-item');
+    let isPlaying = false;
+
+    let longPressTimer;
+    let isLongPress = false;
+
+    musicController.addEventListener('mousedown', () => {
+      longPressTimer = setTimeout(() => {
+        isLongPress = true;
+        volumeControl.classList.add('show');
+      }, 300);
+    });
+
+    musicController.addEventListener('mouseup', (e) => {
+      clearTimeout(longPressTimer);
+      if (!isLongPress) {
+        if (audio.src) {
+          if (isPlaying) {
+            audio.pause();
+          } else {
+            audio.play();
+          }
+        }
+      }
+      isLongPress = false;
+    });
+
+    musicController.addEventListener('mouseleave', () => {
+      clearTimeout(longPressTimer);
+      isLongPress = false;
+    });
+
+    songItems.forEach(item => {
+      item.addEventListener('click', function() {
+        const url = this.dataset.url;
+        const musicIcon = musicController.querySelector('.music-icon');
+        
+        songItems.forEach(song => song.classList.remove('playing'));
+        
+        if (audio.src === url && isPlaying) {
+          audio.pause();
+        } else {
+          if (audio.src !== url) {
+            audio.src = url;
+          }
+          audio.play();
+          this.classList.add('playing');
+        }
+      });
+    });
+
+    audio.addEventListener('ended', () => {
+      isPlaying = false;
+      const musicIcon = musicController.querySelector('.music-icon');
+      musicIcon.innerHTML = '♪';
+      musicIcon.classList.remove('rotating');
+      songItems.forEach(song => song.classList.remove('playing'));
+    });
+
+    audio.addEventListener('pause', () => {
+      const musicIcon = musicController.querySelector('.music-icon');
+      musicIcon.classList.remove('rotating');
+      musicIcon.innerHTML = '♪';
+      isPlaying = false;
+    });
+
+    audio.addEventListener('play', () => {
+      const musicIcon = musicController.querySelector('.music-icon');
+      musicIcon.classList.add('rotating');
+      musicIcon.innerHTML = '♫';
+      isPlaying = true;
+    });
+
+    const volumeControl = document.getElementById('volumeControl');
+    const volumeSlider = document.getElementById('volumeSlider');
+    const volumeIcon = volumeControl.querySelector('.volume-icon');
+    let isVolumeVisible = false;
+
+    volumeSlider.addEventListener('input', (e) => {
+      const value = e.target.value;
+      audio.volume = value / 100;
+      volumeIcon.textContent = value + '%';
+    });
+
+    const playlistBtn = document.getElementById('playlistBtn');
+    
+    playlistBtn.addEventListener('click', () => {
+      playlist.classList.toggle('show');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!musicController.contains(e.target) && 
+          !volumeControl.contains(e.target) && 
+          !playlist.contains(e.target) &&
+          !playlistBtn.contains(e.target)) {
+        volumeControl.classList.remove('show');
+        playlist.classList.remove('show');
+      }
+    });
+
+    audio.volume = 0.5;
+
+    // 添加搜索历史相关功能
+    let searchHistory = [];
+
+    // 加载搜索历史
+    function loadSearchHistory() {
+      const saved = localStorage.getItem('searchHistory');
+      if (saved) {
+        searchHistory = JSON.parse(saved);
+      }
+    }
+
+    // 保存搜索历史
+    function saveSearchHistory() {
+      localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+    }
+
+    // 添加搜索记录
+    function addToHistory(query) {
+      if (!query.trim()) return;
+      
+      // 移除重复项
+      searchHistory = searchHistory.filter(item => item !== query);
+      // 添加到开头
+      searchHistory.unshift(query);
+      // 限制历史记录数量
+      if (searchHistory.length > 10) {
+        searchHistory.pop();
+      }
+      saveSearchHistory();
+    }
+
+    // 渲染搜索历史
+    function renderSearchHistory() {
+      const historyContainer = document.getElementById('search-history');
+      if (searchHistory.length === 0) {
+        historyContainer.classList.remove('show');
+        return;
+      }
+
+      historyContainer.innerHTML = searchHistory.map((item, index) => `
+        <div class="history-item">
+          <span class="history-text">${item}</span>
+          <span class="history-delete" onclick="deleteHistory(${index}, event)">删除</span>
+        </div>
+      `).join('') + `
+        <div class="clear-history" onclick="clearHistory()">清空搜索历史</div>
+      `;
+      
+      historyContainer.classList.add('show');
+    }
+
+    // 删除单条历史记录
+    function deleteHistory(index, event) {
+      event.stopPropagation();
+      searchHistory.splice(index, 1);
+      saveSearchHistory();
+      renderSearchHistory();
+    }
+
+    // 清空历史记录
+    function clearHistory() {
+      searchHistory = [];
+      saveSearchHistory();
+      renderSearchHistory();
+    }
+
+    // 高亮显示匹配文本
+    function highlightText(text, query) {
+      if (!query.trim()) return text;
+      const regex = new RegExp(`(${query})`, 'gi');
+      return text.replace(regex, '<span class="highlight">$1</span>');
+    }
+
+    // 修改搜索和渲染函数
+    function searchMemos(query) {
+      const filteredMemos = memos.filter(memo => 
+        memo.text.toLowerCase().includes(query.toLowerCase()) ||
+        memo.date.includes(query)
+      );
+
+      const list = document.getElementById('memo-list');
+      const noResults = document.getElementById('no-results');
+      list.innerHTML = '';
+      
+      if (filteredMemos.length === 0) {
+        noResults.style.display = 'block';
+      } else {
+        noResults.style.display = 'none';
+        filteredMemos.forEach((memo, index) => {
+          const li = document.createElement('li');
+          li.innerHTML = `
+            <div class="memo-content">
+              <div class="memo-text">${highlightText(memo.text, query)}</div>
+              <div class="memo-date">${memo.date}</div>
+            </div>
+            <button class="delete-btn" onclick="deleteMemo(${index})">删除</button>
+          `;
+          list.appendChild(li);
+        });
+      }
+    }
+
+    // 搜索输入事件处理
+    const searchInput = document.getElementById('search-input');
+    let searchTimeout;
+
+    searchInput.addEventListener('input', function(e) {
+      const query = e.target.value;
+      clearTimeout(searchTimeout);
+      
+      // 延迟搜索，避免频繁更新
+      searchTimeout = setTimeout(() => {
+        searchMemos(query);
+        if (query.trim()) {
+          renderSearchHistory();
+        }
+      }, 300);
+    });
+
+    searchInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter' && this.value.trim()) {
+        addToHistory(this.value.trim());
+        searchMemos(this.value);
+      }
+    });
+
+    // 点击历史记录项
+    document.addEventListener('click', function(e) {
+      const historyContainer = document.getElementById('search-history');
+      const searchWrapper = document.querySelector('.search-wrapper');
+
+      if (e.target.closest('.history-item')) {
+        const text = e.target.closest('.history-item').querySelector('.history-text').textContent;
+        searchInput.value = text;
+        searchMemos(text);
+        historyContainer.classList.remove('show');
+      } else if (!searchWrapper.contains(e.target)) {
+        historyContainer.classList.remove('show');
+      }
+    });
+
+    // 搜索框获得焦点时显示历史记录
+    searchInput.addEventListener('focus', function() {
+      if (searchHistory.length > 0) {
+        renderSearchHistory();
+      }
+    });
+
+    // 初始化搜索历史
+    loadSearchHistory();
+  </script>
+</body>
+</html>
